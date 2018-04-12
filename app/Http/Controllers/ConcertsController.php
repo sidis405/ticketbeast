@@ -6,8 +6,9 @@ use App\Concert;
 
 class ConcertsController extends Controller
 {
-    public function show(Concert $concert)
+    public function show($id)
     {
+        $concert = Concert::published()->findOrFail($id);
         return view('concerts.show')->with(compact('concert'));
     }
 }

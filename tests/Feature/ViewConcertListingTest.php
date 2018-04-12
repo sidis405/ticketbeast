@@ -11,12 +11,10 @@ class ViewConcertListingTest extends TestCase
 {
     use RefreshDatabase;
     /** @test */
-    public function userCanViewAConcertListing()
+    public function userCanViewAPublishedConcertListing()
     {
-        //arrange
-        // Create contert
-        // Direct Model Access - Testing RSPEC book
-        $concert = Concert::create(
+        $concert = create(
+            Concert::class,
             [
                 'title' => 'Daft Punk Live',
                 'subtitle' => 'Funkorama',
@@ -27,26 +25,34 @@ class ViewConcertListingTest extends TestCase
                 'state' => 'RM',
                 'city' => 'Roma',
                 'zip' => '00135',
-                'additional_information' => 'For info call: (555) 555-3456.'
-            ]
+                'additional_information' => 'For info call: (555) 555-3456.',
+            ],
+            'published'
         );
 
-        //act
-        // View Listing
-        $response = $this->get('/concerts/' . $concert->id);
+        // $response = $this->get('/concerts/' . $concert->id);
+        $response = $this->get(route('concerts.show', $concert));
 
-        // dd($response->json());
-
-        // //assert
-        // // See deetails
         $response->assertSee('Daft Punk Live');
         $response->assertSee('Funkorama');
         $response->assertSee('July 16, 2018');
         $response->assertSee('8:00pm');
-        $response->assertSee('32.50');
+        $response->assertSee('€32,50');
         $response->assertSee('Stadio Olimpico');
         $response->assertSee('Viale dei Gladiatori');
         $response->assertSee('00135, Roma, RM');
         $response->assertSee('For info call: (555) 555-3456.');
+    }
+
+    /** @test */
+    public function userCannotViewUnpublishedConcertListings()
+    {
+        $this->withExceptionHandling();
+
+        $concert = create(Concert::class, [], 'unpublished');
+
+        $response = $this->get(route('concerts.show', $concert));
+
+        $response->assertStatus(404);
     }
 }

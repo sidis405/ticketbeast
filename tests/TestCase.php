@@ -4,6 +4,7 @@ namespace Tests;
 
 use App\Exceptions\Handler;
 use Seeds\TestingDatabaseSeeder;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
@@ -17,6 +18,13 @@ abstract class TestCase extends BaseTestCase
         $this->disableExceptionHandling();
         // $this->seed(TestingDatabaseSeeder::class);
     }
+
+    // public function route($uri, $data = [], array $headers = [])
+    // {
+    //     $route = Route::get($uri, $data->toArray());
+    //     $method = strtolower($route->methods()[0]);
+    //     return $this->get($uri, $data->id);
+    // }
 
     public function signIn($user = null)
     {
