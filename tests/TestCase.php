@@ -4,7 +4,7 @@ namespace Tests;
 
 use App\Exceptions\Handler;
 use Seeds\TestingDatabaseSeeder;
-use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
@@ -12,19 +12,19 @@ abstract class TestCase extends BaseTestCase
 {
     use CreatesApplication;
 
+    protected static $migrationsRun = false;
+
     protected function setUp()
     {
         parent::setUp();
         $this->disableExceptionHandling();
         // $this->seed(TestingDatabaseSeeder::class);
+        if (!static::$migrationsRun) {
+            Artisan::call('migrate');
+            static::$migrationsRun = true;
+        }
     }
 
-    // public function route($uri, $data = [], array $headers = [])
-    // {
-    //     $route = Route::get($uri, $data->toArray());
-    //     $method = strtolower($route->methods()[0]);
-    //     return $this->get($uri, $data->id);
-    // }
 
     public function signIn($user = null)
     {
