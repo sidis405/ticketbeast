@@ -27,29 +27,28 @@ class PurchaseTicketsTest extends TestCase
         return $this->postJson(route('concerts.orders.store', $concert), $params);
     }
 
+    private function assertValidationErrorFor($response, $field)
+    {
+        $response->assertStatus(422);
+        $this->assertArrayHasKey($field, $response->json()['errors']);
+    }
+
     /** @test */
     public function customerCanPurchaseConcertTickets()
     {
-        //arrange
-        //create concert
         $ticket_price = 3250;
         $ticketQuantity = 3;
         $email = 'sherlock@221b.co.uk';
         $concert = create(Concert::class, ['ticket_price' => $ticket_price]);
 
-        //act
-        //purchase concert tickets
         $response = $this->orderTickets($concert, [
             'email' => $email,
             'ticketQuantity' => $ticketQuantity,
             'paymentToken' => $this->fakePaymentGateway->getValidTestToken()
         ]);
 
-        //assert
         $response->assertStatus(201);
-        //make sure the customer was charged the correct amount
         $this->assertEquals($ticketQuantity * $ticket_price, $this->fakePaymentGateway->totalCharges());
-        //make sure and order exists
         $order = $concert->orders()->where('email', $email)->first();
         $this->assertNotNull($order);
         $this->assertEquals($ticketQuantity, $order->tickets()->count());
@@ -67,9 +66,7 @@ class PurchaseTicketsTest extends TestCase
             'paymentToken' => $this->fakePaymentGateway->getValidTestToken()
         ]);
 
-
-        $response->assertStatus(422);
-        $this->assertArrayHasKey('email', $response->json()['errors']);
+        $this->assertValidationErrorFor($response, 'email');
     }
 
     /** @test */
@@ -85,9 +82,7 @@ class PurchaseTicketsTest extends TestCase
             'paymentToken' => $this->fakePaymentGateway->getValidTestToken()
         ]);
 
-
-        $response->assertStatus(422);
-        $this->assertArrayHasKey('email', $response->json()['errors']);
+        $this->assertValidationErrorFor($response, 'email');
     }
 
     /** @test */
@@ -102,9 +97,7 @@ class PurchaseTicketsTest extends TestCase
             'paymentToken' => $this->fakePaymentGateway->getValidTestToken()
         ]);
 
-
-        $response->assertStatus(422);
-        $this->assertArrayHasKey('ticketQuantity', $response->json()['errors']);
+        $this->assertValidationErrorFor($response, 'ticketQuantity');
     }
 
     /** @test */
@@ -120,9 +113,7 @@ class PurchaseTicketsTest extends TestCase
             'paymentToken' => $this->fakePaymentGateway->getValidTestToken()
         ]);
 
-
-        $response->assertStatus(422);
-        $this->assertArrayHasKey('ticketQuantity', $response->json()['errors']);
+        $this->assertValidationErrorFor($response, 'ticketQuantity');
     }
 
     /** @test */
@@ -138,9 +129,7 @@ class PurchaseTicketsTest extends TestCase
             'paymentToken' => $this->fakePaymentGateway->getValidTestToken()
         ]);
 
-
-        $response->assertStatus(422);
-        $this->assertArrayHasKey('ticketQuantity', $response->json()['errors']);
+        $this->assertValidationErrorFor($response, 'ticketQuantity');
     }
 
     /** @test */
@@ -155,8 +144,23 @@ class PurchaseTicketsTest extends TestCase
             'ticketQuantity' => 3
         ]);
 
+        $this->assertValidationErrorFor($response, 'paymentToken');
+    }
+
+    /** @test */
+    public function anOrderIsNotCreatedIfPaymentFails()
+    {
+        $concert = create(Concert::class);
+        $this->withExceptionHandling();
+
+        $response = $this->orderTickets($concert, [
+            'email' => 'sherlock@221b.co.uk',
+            'ticketQuantity' => 3,
+            'paymentToken' => 'invalid-payment-token'
+        ]);
 
         $response->assertStatus(422);
-        $this->assertArrayHasKey('paymentToken', $response->json()['errors']);
+        $order = $concert->orders()->where('email', 'sherlock@221b.co.uk')->first();
+        $this->assertNull($order);
     }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Concert;
 use Illuminate\Http\Request;
 use App\Billing\PaymentGateway;
+use App\Billing\PaymentFailedException;
 
 class ConcertOrdersController extends Controller
 {
@@ -51,14 +52,18 @@ class ConcertOrdersController extends Controller
             ]
         );
 
-        $this->paymentGateway->charge(
-            $request->get('ticketQuantity') * $concert->ticket_price,
-            $request->get('paymentToken')
-        );
+        try {
+            $this->paymentGateway->charge(
+                $request->get('ticketQuantity') * $concert->ticket_price,
+                $request->get('paymentToken')
+            );
 
-        $concert->orderTickets($request->get('email'), $request->get('ticketQuantity'));
+            $concert->orderTickets($request->get('email'), $request->get('ticketQuantity'));
 
-        return response()->json([], 201);
+            return response()->json([], 201);
+        } catch (PaymentFailedException $e) {
+            return response()->json([], 422);
+        }
     }
 
     /**
