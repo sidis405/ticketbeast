@@ -8,7 +8,7 @@ class Concert extends Model
 {
     protected $guarded = [];
     protected $casts = [
-        'date' => 'datetime'
+        'date' => 'datetime',
     ];
 
     protected $appends = [
@@ -35,6 +35,16 @@ class Concert extends Model
     public function scopePublished($builder)
     {
         return $builder->whereNotNull('published_at');
+    }
+
+    public function scopeUnpublished($builder)
+    {
+        return $builder->whereNull('published_at');
+    }
+
+    public function isUnpublished()
+    {
+        return is_null($this->published_at);
     }
 
     public function orders()
